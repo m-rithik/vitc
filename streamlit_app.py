@@ -85,11 +85,6 @@ sheet = get_google_sheet()
 # Fetch all records (no caching here as sheet object is mutable)
 records = get_all_reviews(sheet)
 
-# Debug: Output the records to check the structure
-if records:
-    st.write("Fetched Records:")
-    st.write(records[0])  # Show the first record to inspect the columns
-
 # Display search results
 if matches:
     st.write("Teachers found:")
@@ -109,7 +104,6 @@ if matches:
                 if reviews:
                     st.write("### Existing Reviews:")
                     for review in reviews:
-                        # Check if the keys exist in the record
                         teaching = review.get('Teaching', 'N/A')
                         leniency = review.get('Leniency', 'N/A')
                         correction = review.get('Correction', 'N/A')
@@ -124,6 +118,10 @@ if matches:
             correction = st.slider("Correction", 0, 10, key=f"correction_{idx}")
             da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
 
+            # Calculate the overall rating based on the inputs
+            overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
+            st.write(f"**Overall Rating**: {overall_rating}")
+
             # Display the teacher's image
             with col2:
                 try:
@@ -137,9 +135,6 @@ if matches:
             if submit_button:
                 # Check if the teacher already has a review in this session
                 if review_count == 0:  # Prevent multiple submissions for the same teacher
-                    # Calculate the overall rating
-                    overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
-
                     # Prepare the data to insert
                     data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating]
 
