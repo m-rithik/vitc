@@ -54,9 +54,14 @@ def get_all_reviews():
     return []
 
 # Function to get the reviews for a teacher
+# Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
-    # Filter reviews for the teacher
-    reviews = [record for record in records if clean_name(record.get('Teacher ', '').strip()) == teacher_name]
+    # Clean the teacher's name for consistent matching
+    cleaned_teacher_name = clean_name(teacher_name)
+    
+    # Filter reviews for the teacher, matching all entries
+    reviews = [record for record in records if clean_name(record.get('Teacher ', '').strip()) == cleaned_teacher_name]
+    
     return reviews
 
 # Load teachers data from the file
