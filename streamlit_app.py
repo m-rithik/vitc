@@ -55,6 +55,12 @@ def get_number_of_reviews(records, teacher_name):
     review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
     return review_count
 
+# Function to get existing reviews for a teacher
+def get_teacher_reviews(records, teacher_name):
+    # Filter reviews for the teacher
+    reviews = [record for record in records if record['Teacher'] == teacher_name]
+    return reviews
+
 # Load teachers data from the file
 teachers = load_teachers('vitc.txt')
 teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
@@ -91,6 +97,13 @@ if matches:
             # Get the number of reviews for the teacher
             review_count = get_number_of_reviews(records, teacher)
             st.write(f"Number of reviews: {review_count}")
+
+            # Show existing reviews for the teacher
+            reviews = get_teacher_reviews(records, teacher)
+            if reviews:
+                st.write("### Existing Reviews:")
+                for review in reviews:
+                    st.write(f"- **Teaching**: {review['Teaching']} | **Leniency**: {review['Leniency']} | **Correction**: {review['Correction']} | **DA/Quiz**: {review['DA/Quiz']} | **Overall Rating**: {review['Overall Rating']}")
 
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
