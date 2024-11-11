@@ -100,22 +100,33 @@ if matches:
             if reviews:
                 # Display reviews under teacher's name
                 st.write("### Reviews:")
+                overall_ratings = []
                 teaching_scores = []
                 leniency_scores = []
                 correction_scores = []
                 da_quiz_scores = []
 
                 for review in reviews:
+                    # Collect specific ratings and overall rating
                     teaching_scores.append(review.get('Teaching ', 0))
                     leniency_scores.append(review.get('Leniency ', 0))
                     correction_scores.append(review.get('Correction ', 0))
                     da_quiz_scores.append(review.get('DA/Quiz ', 0))
+                    overall_ratings.append(review.get('Overall Rating', 0))
+
+                    # Display individual review ratings
                     st.write(f"- **Teaching**: {review.get('Teaching ', 'N/A')} | **Leniency**: {review.get('Leniency ', 'N/A')} | **Correction**: {review.get('Correction ', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz ', 'N/A')}")
 
-                # Calculate the overall rating
-                overall_rating = calculate_overall_rating(teaching_scores)
+                # Calculate the averaged overall rating
+                if overall_ratings:
+                    avg_overall_rating = sum(overall_ratings) / len(overall_ratings)
+                    avg_overall_rating = min(avg_overall_rating, 10)  # Cap the rating at 10
+                else:
+                    avg_overall_rating = 0
+
+                # Display the averaged overall rating and number of reviews
                 num_reviews = len(reviews)
-                st.write(f"### Overall Rating: {overall_rating:.2f} / 10 ({num_reviews} reviews)")
+                st.write(f"### Overall Rating: {avg_overall_rating:.2f} / 10 ({num_reviews} reviews)")
             else:
                 st.write("No reviews submitted yet for this teacher.")
 
@@ -129,7 +140,6 @@ if matches:
             # Calculate the overall rating based on the inputs
             overall_rating_input = calculate_overall_rating([teaching, leniency, correction, da_quiz])
             st.write(f"**Overall Rating**: {overall_rating_input:.2f} / 10")
-
             # Display the teacher's image
             with col2:
                 try:
