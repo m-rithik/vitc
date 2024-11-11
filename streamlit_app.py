@@ -3,16 +3,18 @@ import re
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Authenticate and connect to Google Sheets
 def get_google_sheet():
-    # Access the credentials from Streamlit secrets
-    credentials = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=["https://www.googleapis.com/auth/spreadsheets"]
-    )
-    client = gspread.authorize(credentials)
-    sheet = client.open("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
-    return sheet
+    try:
+        credentials = Credentials.from_service_account_info(
+            st.secrets["gcp_service_account"],
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        client = gspread.authorize(credentials)
+        sheet = client.open("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
+        return sheet
+    except Exception as e:
+        st.error(f"Failed to connect to Google Sheets: {e}")
+        return None
 
 # Function to read teacher names and image URLs from the text file
 def load_teachers(file):
