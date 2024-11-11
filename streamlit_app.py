@@ -47,20 +47,18 @@ def calculate_overall_rating(teaching, leniency, correction, da_quiz):
     total = teaching + leniency + correction + da_quiz
     return total / 4
 
-# Function to get the number of reviews for a teacher from Google Sheets
-def get_number_of_reviews(sheet, teacher_name):
+# Function to get all reviews from Google Sheets (caching in memory)
+@st.cache_data
+def get_all_reviews(sheet):
     if sheet:
-        # Fetch all records from the sheet
-        records = sheet.get_all_records()
-        
-        # Debugging: Print out the column headers to ensure the correct column names
-        if records:
-            st.write("Sheet Columns: ", records[0].keys())
-        
-        # Count how many reviews the teacher has received based on the 'Teacher' column
-        review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
-        return review_count
-    return 0
+        return sheet.get_all_records()
+    return []
+
+# Function to get the number of reviews for a teacher
+def get_number_of_reviews(records, teacher_name):
+    # Count how many reviews the teacher has received based on the 'Teacher' column
+    review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
+    return review_count
 
 # Load teachers data from the file
 teachers = load_teachers('vitc.txt')
@@ -83,6 +81,9 @@ else:
 # Load Google Sheet
 sheet = get_google_sheet()
 
+# Fetch all records (caching to minimize API calls)
+records = get_all_reviews(sheet)
+
 # Display search results
 if matches:
     st.write("Teachers found:")
@@ -93,7 +94,7 @@ if matches:
             st.subheader(f"Teacher: {teacher}")
 
             # Get the number of reviews for the teacher
-            review_count = get_number_of_reviews(sheet, teacher)
+            review_count = get_number_of_reviews(records, teacher)
             st.write(f"Number of reviews: {review_count}")
 
             # User input section (ratings for the teacher)
