@@ -53,7 +53,7 @@ def get_all_reviews(sheet):
 # Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
     # Filter reviews for the teacher
-    reviews = [record for record in records if clean_name(record.get('Teacher', '')) == teacher_name]
+    reviews = [record for record in records if clean_name(record.get('Teacher ', '').strip()) == teacher_name]
     return reviews
 
 # Load teachers data from the file
@@ -88,9 +88,9 @@ if records:
 # Debug: Display teacher names from the records and cleaned names
 st.write("Teacher names in Google Sheets (cleaned):")
 for record in records:
-    teacher_name_raw = record.get('Teacher', '')
+    teacher_name_raw = record.get('Teacher ', '')
     teacher_name_cleaned = clean_name(teacher_name_raw)
-    st.write(f"Raw: {teacher_name_raw} | Cleaned: {teacher_name_cleaned}")
+    st.write(f"Raw: '{teacher_name_raw}' | Cleaned: '{teacher_name_cleaned}'")
 
 # Display search results
 if matches:
@@ -113,11 +113,11 @@ if matches:
                 da_quiz_scores = []
 
                 for review in reviews:
-                    teaching_scores.append(review.get('Teaching', 0))
-                    leniency_scores.append(review.get('Leniency', 0))
-                    correction_scores.append(review.get('Correction', 0))
-                    da_quiz_scores.append(review.get('DA/Quiz', 0))
-                    st.write(f"- **Teaching**: {review.get('Teaching', 'N/A')} | **Leniency**: {review.get('Leniency', 'N/A')} | **Correction**: {review.get('Correction', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz', 'N/A')}")
+                    teaching_scores.append(review.get('Teaching ', 0))
+                    leniency_scores.append(review.get('Leniency ', 0))
+                    correction_scores.append(review.get('Correction ', 0))
+                    da_quiz_scores.append(review.get('DA/Quiz ', 0))
+                    st.write(f"- **Teaching**: {review.get('Teaching ', 'N/A')} | **Leniency**: {review.get('Leniency ', 'N/A')} | **Correction**: {review.get('Correction ', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz ', 'N/A')}")
 
                 # Calculate the overall rating
                 overall_rating = calculate_overall_rating(teaching_scores)
