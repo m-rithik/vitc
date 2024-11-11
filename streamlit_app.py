@@ -2,7 +2,7 @@ import streamlit as st
 import re
 import os
 
-# Function to read teacher names and image URLs from the text file
+# Function to read teacher names and image URLs from the text fil
 def load_teachers(file):
     teachers = []
     with open(file, 'r') as f:
