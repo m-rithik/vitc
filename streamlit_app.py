@@ -39,9 +39,10 @@ def clean_name(name):
     return re.sub(r'^(dr|mr|ms)\s+', '', name.strip().lower())
 
 # Function to calculate overall rating
-def calculate_overall_rating(teaching, leniency, correction, da_quiz):
-    total = teaching + leniency + correction + da_quiz
-    return total / 4
+def calculate_overall_rating(reviews):
+    if reviews:
+        return sum(reviews) / len(reviews)
+    return 0
 
 # Function to get all reviews from Google Sheets (do not cache sheet, only data)
 def get_all_reviews(sheet):
@@ -49,13 +50,7 @@ def get_all_reviews(sheet):
         return sheet.get_all_records()  # Fetch all records from the sheet
     return []
 
-# Function to get the number of reviews for a teacher
-def get_number_of_reviews(records, teacher_name):
-    # Count how many reviews the teacher has received based on the 'Teacher' column
-    review_count = sum(1 for record in records if record.get('Teacher') == teacher_name)
-    return review_count
-
-# Function to get existing reviews for a teacher
+# Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
     # Filter reviews for the teacher
     reviews = [record for record in records if record.get('Teacher') == teacher_name]
@@ -94,22 +89,30 @@ if matches:
         with col1:
             st.subheader(f"Teacher: {teacher}")
 
-            # Get the number of reviews for the teacher
-            review_count = get_number_of_reviews(records, teacher)
-            st.write(f"Number of reviews: {review_count}")
+            # Get the reviews for the teacher
+            reviews = get_teacher_reviews(records, teacher)
+            
+            if reviews:
+                # Display reviews under teacher's name
+                st.write("### Reviews:")
+                teaching_scores = []
+                leniency_scores = []
+                correction_scores = []
+                da_quiz_scores = []
 
-            # Show existing reviews for the teacher only if it's the one being searched
-            if search_query_cleaned == clean_name(teacher):
-                reviews = get_teacher_reviews(records, teacher)
-                if reviews:
-                    st.write("### Existing Reviews:")
-                    for review in reviews:
-                        teaching = review.get('Teaching', 'N/A')
-                        leniency = review.get('Leniency', 'N/A')
-                        correction = review.get('Correction', 'N/A')
-                        da_quiz = review.get('DA/Quiz', 'N/A')
-                        overall_rating = review.get('Overall Rating', 'N/A')
-                        st.write(f"- **Teaching**: {teaching} | **Leniency**: {leniency} | **Correction**: {correction} | **DA/Quiz**: {da_quiz} | **Overall Rating**: {overall_rating}")
+                for review in reviews:
+                    teaching_scores.append(review.get('Teaching', 0))
+                    leniency_scores.append(review.get('Leniency', 0))
+                    correction_scores.append(review.get('Correction', 0))
+                    da_quiz_scores.append(review.get('DA/Quiz', 0))
+                    st.write(f"- **Teaching**: {review.get('Teaching', 'N/A')} | **Leniency**: {review.get('Leniency', 'N/A')} | **Correction**: {review.get('Correction', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz', 'N/A')}")
+
+                # Calculate the overall rating
+                overall_rating = calculate_overall_rating(teaching_scores)
+                num_reviews = len(reviews)
+                st.write(f"### Overall Rating: {overall_rating:.2f} / 10 (Based on {num_reviews} reviews)")
+            else:
+                st.write("No reviews submitted yet for this teacher.")
 
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
@@ -119,8 +122,8 @@ if matches:
             da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
 
             # Calculate the overall rating based on the inputs
-            overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
-            st.write(f"**Overall Rating**: {overall_rating}")
+            overall_rating_input = calculate_overall_rating([teaching, leniency, correction, da_quiz])
+            st.write(f"**Overall Rating**: {overall_rating_input:.2f} / 10")
 
             # Display the teacher's image
             with col2:
@@ -134,9 +137,9 @@ if matches:
             
             if submit_button:
                 # Check if the teacher already has a review in this session
-                if review_count == 0:  # Prevent multiple submissions for the same teacher
+                if not reviews:  # Prevent multiple submissions for the same teacher
                     # Prepare the data to insert
-                    data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating]
+                    data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating_input]
 
                     try:
                         # Append the review data to Google Sheets
