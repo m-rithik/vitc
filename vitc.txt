@@ -1,6 +1,9 @@
 Name: Dr. Ganesan R
 Image: https://chennai.vit.ac.in/wp-content/uploads/2020/08/50338_SCOPE.jpg
 
+Name: Dr.Admin
+Image: https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.franklywearing.com%2Fd%2Fa3-poster-nasa-142244%3Fvariant_id%3D292&psig=AOvVaw0z-4MiHlrCju_o0ekarTwW&ust=1731433907176000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCMijrIrs1IkDFQAAAAAdAAAAABAE
+
 Name: Dr. Geetha S
 Image: https://chennai.vit.ac.in/wp-content/uploads/2020/08/Dr.Geetha-S-1.jpg
 
