@@ -122,7 +122,7 @@ if matches:
                 # Calculate the overall rating
                 overall_rating = calculate_overall_rating(teaching_scores)
                 num_reviews = len(reviews)
-                st.write(f"### Overall Rating: {overall_rating:.2f} / 10 (Based on {num_reviews} reviews)")
+                st.write(f"### Overall Rating: {overall_rating:.2f} / 10 ({num_reviews} reviews)")
             else:
                 st.write("No reviews submitted yet for this teacher.")
 
