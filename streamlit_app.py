@@ -11,12 +11,11 @@ def get_google_sheet():
             scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         client = gspread.authorize(credentials)
-        sheet = client.open("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
+        sheet = client.open_by_key("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
         return sheet
     except Exception as e:
-        st.error(f"Failed to connect to Google Sheets: {e}")
+        st.error(f"Failed to connect to Google Sheets: {str(e)}")
         return None
-
 # Function to load teacher data from a file
 def load_teachers(file):
     teachers = []
