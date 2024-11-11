@@ -42,7 +42,27 @@ def clean_name(name):
 def sanitize_name_for_key(name, idx):
     return re.sub(r'\W+', '_', name.strip().lower()) + f"_{idx}"  # Append index to ensure uniqueness
 
-# Load teachers data
+# Function to calculate overall rating
+def calculate_overall_rating(teaching, leniency, correction, da_quiz):
+    total = teaching + leniency + correction + da_quiz
+    return total / 4
+
+# Function to get the number of reviews for a teacher from Google Sheets
+def get_number_of_reviews(sheet, teacher_name):
+    if sheet:
+        # Fetch all records from the sheet
+        records = sheet.get_all_records()
+        
+        # Debugging: Print out the column headers to ensure the correct column names
+        if records:
+            st.write("Sheet Columns: ", records[0].keys())
+        
+        # Count how many reviews the teacher has received based on the 'Teacher' column
+        review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
+        return review_count
+    return 0
+
+# Load teachers data from the file
 teachers = load_teachers('vitc.txt')
 teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
 
@@ -63,20 +83,6 @@ else:
 # Load Google Sheet
 sheet = get_google_sheet()
 
-# Function to calculate overall rating
-def calculate_overall_rating(teaching, leniency, correction, da_quiz):
-    total = teaching + leniency + correction + da_quiz
-    return total / 4
-
-# Function to get the number of reviews for a teacher from Google Sheets
-def get_number_of_reviews(teacher_name):
-    if sheet:
-        # Assuming the first column contains teacher names
-        records = sheet.get_all_records()
-        review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
-        return review_count
-    return 0
-
 # Display search results
 if matches:
     st.write("Teachers found:")
@@ -86,8 +92,8 @@ if matches:
         with col1:
             st.subheader(f"Teacher: {teacher}")
 
-            # Get number of reviews for the teacher
-            review_count = get_number_of_reviews(teacher)
+            # Get the number of reviews for the teacher
+            review_count = get_number_of_reviews(sheet, teacher)
             st.write(f"Number of reviews: {review_count}")
 
             # User input section (ratings for the teacher)
@@ -106,10 +112,10 @@ if matches:
 
             # Submit button to save the review
             submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
-
-            # Prevent multiple submissions for the same teacher
+            
             if submit_button:
-                if review_count == 0:  # Prevent submitting multiple reviews for the same teacher
+                # Check if the teacher already has a review in this session
+                if review_count == 0:  # Prevent multiple submissions for the same teacher
                     # Calculate the overall rating
                     overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
 
