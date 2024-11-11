@@ -23,6 +23,10 @@ def load_teachers(file):
 def clean_name(name):
     return re.sub(r'^(dr|mr|ms)\s+', '', name.strip().lower())
 
+# Sanitize teacher name for use as a unique key
+def sanitize_name_for_key(name, idx):
+    return re.sub(r'\W+', '_', name.strip().lower()) + f"_{idx}"  # Append index to ensure uniqueness
+
 # Load teachers data
 teachers = load_teachers('vitc.txt')
 teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
@@ -53,25 +57,31 @@ def calculate_overall_rating(ratings):
 # Display the search results
 if matches:
     st.write("Teachers found:")
-    for teacher, image_url in matches:
+    for idx, (teacher, image_url) in enumerate(matches):
         col1, col2 = st.columns([2, 1])  # Create two columns: one for the name, one for the image
 
         with col1:
             st.subheader(f"Teacher: {teacher}")
 
             # Initialize teacher's reviews in session state if not already present
-            if teacher not in st.session_state.reviews:
-                st.session_state.reviews[teacher] = {
+            teacher_key = f"{teacher}_{idx}"  # Unique key based on teacher's name and index
+            if teacher_key not in st.session_state.reviews:
+                st.session_state.reviews[teacher_key] = {
                     'ratings': [],  # Store all individual ratings as a list of tuples (teaching, leniency, correction, da_quiz)
                     'overall': 0     # Overall rating
                 }
 
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
-            teaching = st.slider("Teaching:", 0, 10)
-            leniency = st.slider("Leniency:", 0, 10)
-            correction = st.slider("Correction:", 0, 10)
-            da_quiz = st.slider("DA/Quiz:", 0, 10)
+            teaching_key = sanitize_name_for_key(f"Teaching: {teacher}", idx)
+            leniency_key = sanitize_name_for_key(f"Leniency: {teacher}", idx)
+            correction_key = sanitize_name_for_key(f"Correction: {teacher}", idx)
+            da_quiz_key = sanitize_name_for_key(f"DA/Quiz: {teacher}", idx)
+
+            teaching = st.slider(f"Teaching: {teacher}", 0, 10, key=teaching_key)
+            leniency = st.slider(f"Leniency: {teacher}", 0, 10, key=leniency_key)
+            correction = st.slider(f"Correction: {teacher}", 0, 10, key=correction_key)
+            da_quiz = st.slider(f"DA/Quiz: {teacher}", 0, 10, key=da_quiz_key)
 
             # Display the teacher's image in a smaller size
             with col2:
@@ -81,36 +91,36 @@ if matches:
                     st.error(f"Error displaying image: {e}")
 
             # Submit button to save the review
-            submit_button = st.button("Submit Review")
+            submit_button = st.button(f"Submit Review for {teacher}")
             
             if submit_button:
                 # Save the ratings in session state
-                st.session_state.reviews[teacher]['ratings'].append((teaching, leniency, correction, da_quiz))
+                st.session_state.reviews[teacher_key]['ratings'].append((teaching, leniency, correction, da_quiz))
                 
                 # Calculate the overall rating
-                overall_rating = calculate_overall_rating(st.session_state.reviews[teacher]['ratings'])
-                st.session_state.reviews[teacher]['overall'] = overall_rating
+                overall_rating = calculate_overall_rating(st.session_state.reviews[teacher_key]['ratings'])
+                st.session_state.reviews[teacher_key]['overall'] = overall_rating
                 
                 # Display success message
-                st.success("Review submitted successfully!")
+                st.success(f"Review for {teacher} submitted successfully!")
 
         # Section 2: Overall Rating and Previous Reviews
         st.markdown("---")
         st.markdown("### **Overall Rating**")
         
         # Calculate average overall rating (without approximating)
-        overall_rating = st.session_state.reviews[teacher]['overall']
+        overall_rating = st.session_state.reviews[teacher_key]['overall']
         
         # Display the overall rating in the overall rating box
-        st.markdown(f"**Overall Rating (based on {len(st.session_state.reviews[teacher]['ratings'])} reviews):**")
+        st.markdown(f"**Overall Rating (based on {len(st.session_state.reviews[teacher_key]['ratings'])} reviews):**")
         st.markdown(f"{overall_rating:.2f} / 10", unsafe_allow_html=True)  # Display on 10-point scale
         
         # Display reviews and their individual ratings
         st.markdown("### **REVIEWS**")
-        if not st.session_state.reviews[teacher]['ratings']:
+        if not st.session_state.reviews[teacher_key]['ratings']:
             st.write("No reviews available.")
         else:
-            for idx, rating in enumerate(st.session_state.reviews[teacher]['ratings']):
+            for idx, rating in enumerate(st.session_state.reviews[teacher_key]['ratings']):
                 st.write(f"**Review {idx + 1}:**")
                 st.write(f"Teaching: {rating[0]}/10, Leniency: {rating[1]}/10, Correction: {rating[2]}/10, DA/Quiz: {rating[3]}/10")
 
