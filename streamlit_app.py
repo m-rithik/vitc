@@ -5,12 +5,13 @@ from google.oauth2.service_account import Credentials
 
 # Authenticate and connect to Google Sheets
 def get_google_sheet():
+    # Access the credentials from Streamlit secrets
     credentials = Credentials.from_service_account_info(
         st.secrets["gcp_service_account"],
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
     )
     client = gspread.authorize(credentials)
-    sheet = client.open("Your_Google_Sheet_Name").sheet1
+    sheet = client.open("vitc").sheet1
     return sheet
 
 # Function to read teacher names and image URLs from the text file
