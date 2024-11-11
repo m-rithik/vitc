@@ -16,6 +16,7 @@ def get_google_sheet():
     except Exception as e:
         st.error(f"Failed to connect to Google Sheets: {str(e)}")
         return None
+
 # Function to load teacher data from a file
 def load_teachers(file):
     teachers = []
@@ -105,10 +106,10 @@ if matches:
 
             # Submit button to save the review
             submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
-            
+
+            # Prevent multiple submissions for the same teacher
             if submit_button:
-                # Check if the teacher already has a review in this session
-                if review_count == 0:  # Prevent multiple submissions for the same teacher
+                if review_count == 0:  # Prevent submitting multiple reviews for the same teacher
                     # Calculate the overall rating
                     overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
 
