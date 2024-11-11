@@ -1,6 +1,17 @@
 import streamlit as st
 import re
-import os
+import gspread
+from google.oauth2.service_account import Credentials
+
+# Authenticate and connect to Google Sheets
+def get_google_sheet():
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=["https://www.googleapis.com/auth/spreadsheets"]
+    )
+    client = gspread.authorize(credentials)
+    sheet = client.open("Your_Google_Sheet_Name").sheet1
+    return sheet
 
 # Function to read teacher names and image URLs from the text file
 def load_teachers(file):
@@ -45,14 +56,13 @@ if search_query:
 else:
     matches = []
 
-# Load reviews from session state if not already loaded
-if 'reviews' not in st.session_state:
-    st.session_state.reviews = {}
+# Load Google Sheet
+sheet = get_google_sheet()
 
 # Function to calculate overall rating (based on existing ratings)
-def calculate_overall_rating(ratings):
-    total_rating = sum([sum(rating) for rating in ratings])
-    return total_rating / (len(ratings) * 4) if ratings else 0
+def calculate_overall_rating(teaching, leniency, correction, da_quiz):
+    total = teaching + leniency + correction + da_quiz
+    return total / 4
 
 # Display the search results
 if matches:
@@ -63,25 +73,12 @@ if matches:
         with col1:
             st.subheader(f"Teacher: {teacher}")
 
-            # Initialize teacher's reviews in session state if not already present
-            teacher_key = f"{teacher}_{idx}"  # Unique key based on teacher's name and index
-            if teacher_key not in st.session_state.reviews:
-                st.session_state.reviews[teacher_key] = {
-                    'ratings': [],  # Store all individual ratings as a list of tuples (teaching, leniency, correction, da_quiz)
-                    'overall': 0     # Overall rating
-                }
-
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
-            teaching_key = sanitize_name_for_key(f"Teaching: {teacher}", idx)
-            leniency_key = sanitize_name_for_key(f"Leniency: {teacher}", idx)
-            correction_key = sanitize_name_for_key(f"Correction: {teacher}", idx)
-            da_quiz_key = sanitize_name_for_key(f"DA/Quiz: {teacher}", idx)
-
-            teaching = st.slider(f"Teaching: {teacher}", 0, 10, key=teaching_key)
-            leniency = st.slider(f"Leniency: {teacher}", 0, 10, key=leniency_key)
-            correction = st.slider(f"Correction: {teacher}", 0, 10, key=correction_key)
-            da_quiz = st.slider(f"DA/Quiz: {teacher}", 0, 10, key=da_quiz_key)
+            teaching = st.slider("Teaching", 0, 10, key=f"teaching_{idx}")
+            leniency = st.slider("Leniency", 0, 10, key=f"leniency_{idx}")
+            correction = st.slider("Correction", 0, 10, key=f"correction_{idx}")
+            da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
 
             # Display the teacher's image in a smaller size
             with col2:
@@ -91,38 +88,19 @@ if matches:
                     st.error(f"Error displaying image: {e}")
 
             # Submit button to save the review
-            submit_button = st.button(f"Submit Review for {teacher}")
+            submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
             
             if submit_button:
-                # Save the ratings in session state
-                st.session_state.reviews[teacher_key]['ratings'].append((teaching, leniency, correction, da_quiz))
-                
                 # Calculate the overall rating
-                overall_rating = calculate_overall_rating(st.session_state.reviews[teacher_key]['ratings'])
-                st.session_state.reviews[teacher_key]['overall'] = overall_rating
-                
-                # Display success message
-                st.success(f"Review for {teacher} submitted successfully!")
+                overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
 
-        # Section 2: Overall Rating and Previous Reviews
-        st.markdown("---")
-        st.markdown("### **Overall Rating**")
-        
-        # Calculate average overall rating (without approximating)
-        overall_rating = st.session_state.reviews[teacher_key]['overall']
-        
-        # Display the overall rating in the overall rating box
-        st.markdown(f"**Overall Rating (based on {len(st.session_state.reviews[teacher_key]['ratings'])} reviews):**")
-        st.markdown(f"{overall_rating:.2f} / 10", unsafe_allow_html=True)  # Display on 10-point scale
-        
-        # Display reviews and their individual ratings
-        st.markdown("### **REVIEWS**")
-        if not st.session_state.reviews[teacher_key]['ratings']:
-            st.write("No reviews available.")
-        else:
-            for idx, rating in enumerate(st.session_state.reviews[teacher_key]['ratings']):
-                st.write(f"**Review {idx + 1}:**")
-                st.write(f"Teaching: {rating[0]}/10, Leniency: {rating[1]}/10, Correction: {rating[2]}/10, DA/Quiz: {rating[3]}/10")
+                # Write the ratings and overall rating to Google Sheets
+                data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating]
+                try:
+                    sheet.append_row(data_to_insert)
+                    st.success(f"Review for {teacher} submitted successfully!")
+                except Exception as e:
+                    st.error(f"Failed to submit review: {e}")
 
 else:
     st.write("No teachers found.")
@@ -131,7 +109,7 @@ else:
 st.markdown(
     """
     <hr style="margin-top: 3rem;">
-    <div style="text-align: center; color: grey; font-size: 3.0rem;">
+    <div style="text-align: center; color: grey; font-size: 1.2rem;">
         Please contribute with reviews
     </div>
     """,
