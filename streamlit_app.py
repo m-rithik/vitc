@@ -52,13 +52,13 @@ def get_all_reviews(sheet):
 # Function to get the number of reviews for a teacher
 def get_number_of_reviews(records, teacher_name):
     # Count how many reviews the teacher has received based on the 'Teacher' column
-    review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
+    review_count = sum(1 for record in records if record.get('Teacher') == teacher_name)
     return review_count
 
 # Function to get existing reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
     # Filter reviews for the teacher
-    reviews = [record for record in records if record['Teacher'] == teacher_name]
+    reviews = [record for record in records if record.get('Teacher') == teacher_name]
     return reviews
 
 # Load teachers data from the file
@@ -85,6 +85,11 @@ sheet = get_google_sheet()
 # Fetch all records (no caching here as sheet object is mutable)
 records = get_all_reviews(sheet)
 
+# Debug: Output the records to check the structure
+if records:
+    st.write("Fetched Records:")
+    st.write(records[0])  # Show the first record to inspect the columns
+
 # Display search results
 if matches:
     st.write("Teachers found:")
@@ -103,7 +108,13 @@ if matches:
             if reviews:
                 st.write("### Existing Reviews:")
                 for review in reviews:
-                    st.write(f"- **Teaching**: {review['Teaching']} | **Leniency**: {review['Leniency']} | **Correction**: {review['Correction']} | **DA/Quiz**: {review['DA/Quiz']} | **Overall Rating**: {review['Overall Rating']}")
+                    # Check if the keys exist in the record
+                    teaching = review.get('Teaching', 'N/A')
+                    leniency = review.get('Leniency', 'N/A')
+                    correction = review.get('Correction', 'N/A')
+                    da_quiz = review.get('DA/Quiz', 'N/A')
+                    overall_rating = review.get('Overall Rating', 'N/A')
+                    st.write(f"- **Teaching**: {teaching} | **Leniency**: {leniency} | **Correction**: {correction} | **DA/Quiz**: {da_quiz} | **Overall Rating**: {overall_rating}")
 
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
