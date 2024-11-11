@@ -45,9 +45,10 @@ def calculate_overall_rating(reviews):
         return sum(reviews) / len(reviews)
     return 0
 
-# Function to get all reviews from Google Sheets (cached version)
-@st.cache_data  # Cache reviews data to prevent repeated API calls
-def get_all_reviews(sheet):
+# Function to get all reviews from Google Sheets
+@st.cache_data  # Cache reviews data separately to prevent repeated API calls
+def get_all_reviews():
+    sheet = get_google_sheet()
     if sheet:
         return sheet.get_all_records()  # Fetch all records from the sheet
     return []
@@ -76,19 +77,8 @@ if search_query:
 else:
     matches = []
 
-# Load Google Sheet only if it hasn't been loaded yet in the session
-if 'sheet' not in st.session_state:
-    sheet = get_google_sheet()
-    st.session_state.sheet = sheet
-else:
-    sheet = st.session_state.sheet
-
-# Fetch all records (only if the sheet object is valid)
-if sheet and 'records' not in st.session_state:
-    records = get_all_reviews(sheet)
-    st.session_state.records = records
-else:
-    records = st.session_state.records
+# Fetch all records once (cached version)
+records = get_all_reviews()
 
 # Display search results
 if matches:
@@ -147,19 +137,21 @@ if matches:
 
             if submit_button:
                 # Check if the teacher already has a review in this session
-                if teacher not in st.session_state.submitted_reviews:  # Prevent multiple submissions for the same teacher
+                if teacher not in st.session_state.get('submitted_reviews', []):  # Prevent multiple submissions for the same teacher
                     # Prepare the data to insert
                     data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating_input]
-                    
+
                     try:
                         # Append the review data to Google Sheets
-                        sheet.append_row(data_to_insert)
-                        st.success(f"Review for {teacher} submitted successfully!")
-                        
-                        # Store the review in session state to prevent resubmission
-                        if 'submitted_reviews' not in st.session_state:
-                            st.session_state.submitted_reviews = []
-                        st.session_state.submitted_reviews.append(teacher)
+                        sheet = get_google_sheet()  # Reconnect to Google Sheets for each submit
+                        if sheet:
+                            sheet.append_row(data_to_insert)
+                            st.success(f"Review for {teacher} submitted successfully!")
+
+                            # Track the review in session state to prevent resubmission
+                            if 'submitted_reviews' not in st.session_state:
+                                st.session_state.submitted_reviews = []
+                            st.session_state.submitted_reviews.append(teacher)
                     except Exception as e:
                         st.error(f"Failed to submit review: {e}")
                 else:
