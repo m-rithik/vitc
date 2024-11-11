@@ -11,7 +11,7 @@ def get_google_sheet():
         scopes=["https://www.googleapis.com/auth/spreadsheets"]
     )
     client = gspread.authorize(credentials)
-    sheet = client.open("vitc").sheet1
+    sheet = client.open("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
     return sheet
 
 # Function to read teacher names and image URLs from the text file
