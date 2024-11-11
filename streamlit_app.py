@@ -103,18 +103,19 @@ if matches:
             review_count = get_number_of_reviews(records, teacher)
             st.write(f"Number of reviews: {review_count}")
 
-            # Show existing reviews for the teacher
-            reviews = get_teacher_reviews(records, teacher)
-            if reviews:
-                st.write("### Existing Reviews:")
-                for review in reviews:
-                    # Check if the keys exist in the record
-                    teaching = review.get('Teaching', 'N/A')
-                    leniency = review.get('Leniency', 'N/A')
-                    correction = review.get('Correction', 'N/A')
-                    da_quiz = review.get('DA/Quiz', 'N/A')
-                    overall_rating = review.get('Overall Rating', 'N/A')
-                    st.write(f"- **Teaching**: {teaching} | **Leniency**: {leniency} | **Correction**: {correction} | **DA/Quiz**: {da_quiz} | **Overall Rating**: {overall_rating}")
+            # Show existing reviews for the teacher only if it's the one being searched
+            if search_query_cleaned == clean_name(teacher):
+                reviews = get_teacher_reviews(records, teacher)
+                if reviews:
+                    st.write("### Existing Reviews:")
+                    for review in reviews:
+                        # Check if the keys exist in the record
+                        teaching = review.get('Teaching', 'N/A')
+                        leniency = review.get('Leniency', 'N/A')
+                        correction = review.get('Correction', 'N/A')
+                        da_quiz = review.get('DA/Quiz', 'N/A')
+                        overall_rating = review.get('Overall Rating', 'N/A')
+                        st.write(f"- **Teaching**: {teaching} | **Leniency**: {leniency} | **Correction**: {correction} | **DA/Quiz**: {da_quiz} | **Overall Rating**: {overall_rating}")
 
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
