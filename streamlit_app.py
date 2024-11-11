@@ -53,7 +53,7 @@ def get_all_reviews(sheet):
 # Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
     # Filter reviews for the teacher
-    reviews = [record for record in records if record.get('Teacher') == teacher_name]
+    reviews = [record for record in records if clean_name(record.get('Teacher', '')) == teacher_name]
     return reviews
 
 # Load teachers data from the file
@@ -90,8 +90,8 @@ if matches:
             st.subheader(f"Teacher: {teacher}")
 
             # Get the reviews for the teacher
-            reviews = get_teacher_reviews(records, teacher)
-            
+            reviews = get_teacher_reviews(records, clean_name(teacher))
+
             if reviews:
                 # Display reviews under teacher's name
                 st.write("### Reviews:")
