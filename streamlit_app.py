@@ -2,7 +2,7 @@ import streamlit as st
 import re
 import gspread
 from google.oauth2.service_account import Credentials
-print st.secrets;
+print (st.secrets);
 # Authenticate and connect to Google Sheets
 def get_google_sheet():
     # Access the credentials from Streamlit secrets
