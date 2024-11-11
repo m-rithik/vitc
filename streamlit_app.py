@@ -38,20 +38,15 @@ def load_teachers(file):
 def clean_name(name):
     return re.sub(r'^(dr|mr|ms)\s+', '', name.strip().lower())
 
-# Function to sanitize teacher name for use as a unique key
-def sanitize_name_for_key(name, idx):
-    return re.sub(r'\W+', '_', name.strip().lower()) + f"_{idx}"  # Append index to ensure uniqueness
-
 # Function to calculate overall rating
 def calculate_overall_rating(teaching, leniency, correction, da_quiz):
     total = teaching + leniency + correction + da_quiz
     return total / 4
 
-# Function to get all reviews from Google Sheets (caching in memory)
-@st.cache_data
+# Function to get all reviews from Google Sheets (do not cache sheet, only data)
 def get_all_reviews(sheet):
     if sheet:
-        return sheet.get_all_records()
+        return sheet.get_all_records()  # Fetch all records from the sheet
     return []
 
 # Function to get the number of reviews for a teacher
@@ -81,7 +76,7 @@ else:
 # Load Google Sheet
 sheet = get_google_sheet()
 
-# Fetch all records (caching to minimize API calls)
+# Fetch all records (no caching here as sheet object is mutable)
 records = get_all_reviews(sheet)
 
 # Display search results
