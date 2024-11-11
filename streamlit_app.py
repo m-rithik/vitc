@@ -80,6 +80,18 @@ sheet = get_google_sheet()
 # Fetch all records (no caching here as sheet object is mutable)
 records = get_all_reviews(sheet)
 
+# Debug: Display the records to see if they are being retrieved correctly
+if records:
+    st.write("Reviews Data from Google Sheets:")
+    st.write(records)
+
+# Debug: Display teacher names from the records and cleaned names
+st.write("Teacher names in Google Sheets (cleaned):")
+for record in records:
+    teacher_name_raw = record.get('Teacher', '')
+    teacher_name_cleaned = clean_name(teacher_name_raw)
+    st.write(f"Raw: {teacher_name_raw} | Cleaned: {teacher_name_cleaned}")
+
 # Display search results
 if matches:
     st.write("Teachers found:")
