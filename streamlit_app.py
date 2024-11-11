@@ -64,15 +64,8 @@ teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
 st.title("VIT Chennai Teacher Review")
 st.header("Search for a Teacher")
 
-# Search bar (case insensitive and ignore titles like Dr, Mr, Ms)
-search_query = st.text_input("Search for a teacher:")
-
-# Find matching teachers based on the search query
-if search_query:
-    search_query_cleaned = clean_name(search_query)
-    matches = [teachers[i] for i in range(len(teachers_cleaned)) if search_query_cleaned in teachers_cleaned[i]]
-else:
-    matches = []
+# Create a search dropdown for teachers
+search_query = st.selectbox("Select a teacher:", options=[teacher[0] for teacher in teachers], help="Start typing to find a teacher")
 
 # Load Google Sheet
 sheet = get_google_sheet()
@@ -85,84 +78,61 @@ records = get_all_reviews(sheet)
 #     st.write("Reviews Data from Google Sheets:")
 #     st.write(records)
 
-# # Debug: Display teacher names from the records and cleaned names
-# st.write("Teacher names in Google Sheets (cleaned):")
-# for record in records:
-#     teacher_name_raw = record.get('Teacher ', '')
-#     teacher_name_cleaned = clean_name(teacher_name_raw)
-#     st.write(f"Raw: '{teacher_name_raw}' | Cleaned: '{teacher_name_cleaned}'")
+# Display teacher details if a teacher is selected
+if search_query:
+    st.write(f"Teacher: {search_query}")
+    
+    # Get the reviews for the teacher
+    reviews = get_teacher_reviews(records, clean_name(search_query))
 
-# Display search results
-if matches:
-    st.write("Teachers found:")
-    for idx, (teacher, image_url) in enumerate(matches):
-        col1, col2 = st.columns([2, 1])  # Create two columns: one for the name, one for the image
+    if reviews:
+        st.write("### Reviews:")
+        teaching_scores = []
+        leniency_scores = []
+        correction_scores = []
+        da_quiz_scores = []
 
-        with col1:
-            st.subheader(f"Teacher: {teacher}")
+        for review in reviews:
+            teaching_scores.append(review.get('Teaching ', 0))
+            leniency_scores.append(review.get('Leniency ', 0))
+            correction_scores.append(review.get('Correction ', 0))
+            da_quiz_scores.append(review.get('DA/Quiz ', 0))
+            st.write(f"- **Teaching**: {review.get('Teaching ', 'N/A')} | **Leniency**: {review.get('Leniency ', 'N/A')} | **Correction**: {review.get('Correction ', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz ', 'N/A')}")
 
-            # Get the reviews for the teacher
-            reviews = get_teacher_reviews(records, clean_name(teacher))
+        # Calculate the overall rating
+        overall_rating = calculate_overall_rating(teaching_scores)
+        num_reviews = len(reviews)
+        st.write(f"### Overall Rating: {overall_rating:.2f} / 10 ({num_reviews} reviews)")
+    else:
+        st.write("No reviews submitted yet for this teacher.")
 
-            if reviews:
-                # Display reviews under teacher's name
-                st.write("### Reviews:")
-                teaching_scores = []
-                leniency_scores = []
-                correction_scores = []
-                da_quiz_scores = []
+    # User input section (ratings for the teacher)
+    st.markdown("### **Rate the Teacher**")
+    teaching = st.slider("Teaching", 0, 10)
+    leniency = st.slider("Leniency", 0, 10)
+    correction = st.slider("Correction", 0, 10)
+    da_quiz = st.slider("DA/Quiz", 0, 10)
 
-                for review in reviews:
-                    teaching_scores.append(review.get('Teaching ', 0))
-                    leniency_scores.append(review.get('Leniency ', 0))
-                    correction_scores.append(review.get('Correction ', 0))
-                    da_quiz_scores.append(review.get('DA/Quiz ', 0))
-                    st.write(f"- **Teaching**: {review.get('Teaching ', 'N/A')} | **Leniency**: {review.get('Leniency ', 'N/A')} | **Correction**: {review.get('Correction ', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz ', 'N/A')}")
+    # Calculate the overall rating based on the inputs
+    overall_rating_input = calculate_overall_rating([teaching, leniency, correction, da_quiz])
+    st.write(f"**Overall Rating**: {overall_rating_input:.2f} / 10")
 
-                # Calculate the overall rating
-                overall_rating = calculate_overall_rating(teaching_scores)
-                num_reviews = len(reviews)
-                st.write(f"### Overall Rating: {overall_rating:.2f} / 10 ({num_reviews} reviews)")
-            else:
-                st.write("No reviews submitted yet for this teacher.")
+    # Submit button to save the review
+    submit_button = st.button(f"Submit Review for {search_query}")
 
-            # User input section (ratings for the teacher)
-            st.markdown("### **Rate the Teacher**")
-            teaching = st.slider("Teaching", 0, 10, key=f"teaching_{idx}")
-            leniency = st.slider("Leniency", 0, 10, key=f"leniency_{idx}")
-            correction = st.slider("Correction", 0, 10, key=f"correction_{idx}")
-            da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
+    if submit_button:
+        # Prepare the data to insert
+        data_to_insert = [search_query, teaching, leniency, correction, da_quiz, overall_rating_input]
 
-            # Calculate the overall rating based on the inputs
-            overall_rating_input = calculate_overall_rating([teaching, leniency, correction, da_quiz])
-            st.write(f"**Overall Rating**: {overall_rating_input:.2f} / 10")
+        try:
+            # Append the review data to Google Sheets
+            sheet.append_row(data_to_insert)
+            st.success(f"Review for {search_query} submitted successfully!")
+        except Exception as e:
+            st.error(f"Failed to submit review: {e}")
 
-            # Display the teacher's image
-            with col2:
-                try:
-                    st.image(image_url, caption=f"{teacher}'s Picture", width=150)
-                except Exception as e:
-                    st.error(f"Error displaying image: {e}")
-
-            # Submit button to save the review
-            submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
-            
-            if submit_button:
-                # Check if the teacher already has a review in this session
-                if not reviews:  # Prevent multiple submissions for the same teacher
-                    # Prepare the data to insert
-                    data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating_input]
-
-                    try:
-                        # Append the review data to Google Sheets
-                        sheet.append_row(data_to_insert)
-                        st.success(f"Review for {teacher} submitted successfully!")
-                    except Exception as e:
-                        st.error(f"Failed to submit review: {e}")
-                else:
-                    st.warning(f"Review for {teacher} has already been submitted. You can only submit one review per teacher.")
 else:
-    st.write("No teachers found.")
+    st.write("No teacher selected.")
 
 # Footer message
 st.markdown(
