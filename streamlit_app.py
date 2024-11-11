@@ -3,11 +3,12 @@ import re
 import gspread
 from google.oauth2.service_account import Credentials
 
+# Function to get Google Sheets connection
 def get_google_sheet():
     try:
         credentials = Credentials.from_service_account_info(
             st.secrets["gcp_service_account"],
-            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]  # Add the drive scope
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         client = gspread.authorize(credentials)
         sheet = client.open("1JAAE6abFQ1T-SsO_FJTygDsM85kjvPrAC9l15PvcEwU").sheet1
@@ -16,7 +17,7 @@ def get_google_sheet():
         st.error(f"Failed to connect to Google Sheets: {e}")
         return None
 
-# Function to read teacher names and image URLs from the text file
+# Function to load teacher data from a file
 def load_teachers(file):
     teachers = []
     with open(file, 'r') as f:
@@ -30,14 +31,14 @@ def load_teachers(file):
                 image_url = line.strip().replace("Image: ", "")
                 if teacher_name and image_url:
                     teachers.append((teacher_name, image_url))
-                    teacher_name, image_url = None, None  # Reset for the next entry
+                    teacher_name, image_url = None, None  # Reset for next entry
     return teachers
 
-# Clean teacher names for search comparison
+# Function to clean teacher name for search comparison
 def clean_name(name):
     return re.sub(r'^(dr|mr|ms)\s+', '', name.strip().lower())
 
-# Sanitize teacher name for use as a unique key
+# Function to sanitize teacher name for use as a unique key
 def sanitize_name_for_key(name, idx):
     return re.sub(r'\W+', '_', name.strip().lower()) + f"_{idx}"  # Append index to ensure uniqueness
 
@@ -62,12 +63,21 @@ else:
 # Load Google Sheet
 sheet = get_google_sheet()
 
-# Function to calculate overall rating (based on existing ratings)
+# Function to calculate overall rating
 def calculate_overall_rating(teaching, leniency, correction, da_quiz):
     total = teaching + leniency + correction + da_quiz
     return total / 4
 
-# Display the search results
+# Function to get the number of reviews for a teacher from Google Sheets
+def get_number_of_reviews(teacher_name):
+    if sheet:
+        # Assuming the first column contains teacher names
+        records = sheet.get_all_records()
+        review_count = sum(1 for record in records if record['Teacher'] == teacher_name)
+        return review_count
+    return 0
+
+# Display search results
 if matches:
     st.write("Teachers found:")
     for idx, (teacher, image_url) in enumerate(matches):
@@ -76,6 +86,10 @@ if matches:
         with col1:
             st.subheader(f"Teacher: {teacher}")
 
+            # Get number of reviews for the teacher
+            review_count = get_number_of_reviews(teacher)
+            st.write(f"Number of reviews: {review_count}")
+
             # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
             teaching = st.slider("Teaching", 0, 10, key=f"teaching_{idx}")
@@ -83,7 +97,7 @@ if matches:
             correction = st.slider("Correction", 0, 10, key=f"correction_{idx}")
             da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
 
-            # Display the teacher's image in a smaller size
+            # Display the teacher's image
             with col2:
                 try:
                     st.image(image_url, caption=f"{teacher}'s Picture", width=150)
@@ -94,17 +108,22 @@ if matches:
             submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
             
             if submit_button:
-                # Calculate the overall rating
-                overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
+                # Check if the teacher already has a review in this session
+                if review_count == 0:  # Prevent multiple submissions for the same teacher
+                    # Calculate the overall rating
+                    overall_rating = calculate_overall_rating(teaching, leniency, correction, da_quiz)
 
-                # Write the ratings and overall rating to Google Sheets
-                data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating]
-                try:
-                    sheet.append_row(data_to_insert)
-                    st.success(f"Review for {teacher} submitted successfully!")
-                except Exception as e:
-                    st.error(f"Failed to submit review: {e}")
+                    # Prepare the data to insert
+                    data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating]
 
+                    try:
+                        # Append the review data to Google Sheets
+                        sheet.append_row(data_to_insert)
+                        st.success(f"Review for {teacher} submitted successfully!")
+                    except Exception as e:
+                        st.error(f"Failed to submit review: {e}")
+                else:
+                    st.warning(f"Review for {teacher} has already been submitted. You can only submit one review per teacher.")
 else:
     st.write("No teachers found.")
 
