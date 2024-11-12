@@ -179,7 +179,7 @@ st.markdown(
     """
     <hr style="margin-top: 3rem;">
     <div style="text-align: center; color: grey; font-size: 1.2rem;">
-        Please contribute with reviews
+        Please contribute with reviews | <a href="https://forms.gle/YFLkZi3UxRtGyxdA9" target="_blank" style="color: #8f8f8f; text-decoration: none; font-weight: bold;">Contact Me</a>
     </div>
     """,
     unsafe_allow_html=True
