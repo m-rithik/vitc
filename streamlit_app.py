@@ -174,12 +174,19 @@ if matches:
 else:
     st.write("No teachers found.")
 
+# Get all reviews to calculate the total count
+records = get_all_reviews()
+total_reviews = len(records)
+
 # Footer message
 st.markdown(
-    """
+    f"""
     <hr style="margin-top: 3rem;">
     <div style="text-align: center; color: grey; font-size: 1.2rem;">
         Please contribute with reviews | <a href="https://forms.gle/YFLkZi3UxRtGyxdA9" target="_blank" style="color: #8f8f8f; text-decoration: none; font-weight: bold;">Contact Me</a>
+    </div>
+    <div style="text-align: center; color: #4CAF50; font-size: 1.5rem; margin-top: 1rem;">
+        Total number of reviews: {total_reviews}
     </div>
     """,
     unsafe_allow_html=True
