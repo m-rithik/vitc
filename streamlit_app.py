@@ -54,9 +54,14 @@ def get_all_reviews():
     return []
 
 # Function to get the reviews for a teacher
+# Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
+    # Clean the teacher's name for consistent matching
     cleaned_teacher_name = clean_name(teacher_name)
+    
+    # Filter reviews for the teacher, matching all entries
     reviews = [record for record in records if clean_name(record.get('Teacher ', '').strip()) == cleaned_teacher_name]
+    
     return reviews
 
 # Load teachers data from the file
@@ -84,7 +89,7 @@ records = get_all_reviews()
 if matches:
     st.write("Teachers found:")
     for idx, (teacher, image_url) in enumerate(matches):
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns([2, 1])  # Create two columns: one for the name, one for the image
 
         with col1:
             st.subheader(f"Teacher: {teacher}")
@@ -93,6 +98,7 @@ if matches:
             reviews = get_teacher_reviews(records, clean_name(teacher))
 
             if reviews:
+                # Display reviews under teacher's name
                 st.write("### Reviews:")
                 overall_ratings = []
                 teaching_scores = []
@@ -101,51 +107,63 @@ if matches:
                 da_quiz_scores = []
 
                 for review in reviews:
+                    # Collect specific ratings and overall rating
                     teaching_scores.append(review.get('Teaching ', 0))
                     leniency_scores.append(review.get('Leniency ', 0))
                     correction_scores.append(review.get('Correction ', 0))
                     da_quiz_scores.append(review.get('DA/Quiz ', 0))
                     overall_ratings.append(review.get('Overall Rating', 0))
 
+                    # Display individual review ratings
                     st.write(f"- **Teaching**: {review.get('Teaching ', 'N/A')} | **Leniency**: {review.get('Leniency ', 'N/A')} | **Correction**: {review.get('Correction ', 'N/A')} | **DA/Quiz**: {review.get('DA/Quiz ', 'N/A')}")
 
+                # Calculate the averaged overall rating
                 if overall_ratings:
                     avg_overall_rating = sum(overall_ratings) / len(overall_ratings)
-                    avg_overall_rating = min(avg_overall_rating, 10)
+                    avg_overall_rating = min(avg_overall_rating, 10)  # Cap the rating at 10
                 else:
                     avg_overall_rating = 0
 
+                # Display the averaged overall rating and number of reviews
                 num_reviews = len(reviews)
                 st.write(f"### Overall Rating: {avg_overall_rating:.2f} / 10 ({num_reviews} reviews)")
             else:
                 st.write("No reviews submitted yet for this teacher.")
 
+            # User input section (ratings for the teacher)
             st.markdown("### **Rate the Teacher**")
             teaching = st.slider("Teaching", 0, 10, key=f"teaching_{idx}")
             leniency = st.slider("Leniency", 0, 10, key=f"leniency_{idx}")
             correction = st.slider("Correction", 0, 10, key=f"correction_{idx}")
             da_quiz = st.slider("DA/Quiz", 0, 10, key=f"da_quiz_{idx}")
 
+            # Calculate the overall rating based on the inputs
             overall_rating_input = calculate_overall_rating([teaching, leniency, correction, da_quiz])
             st.write(f"**Overall Rating**: {overall_rating_input:.2f} / 10")
-            
+            # Display the teacher's image
             with col2:
                 try:
                     st.image(image_url, caption=f"{teacher}'s Picture", width=150)
                 except Exception as e:
                     st.error(f"Error displaying image: {e}")
 
+            # Submit button to save the review
             submit_button = st.button(f"Submit Review for {teacher}", key=f"submit_{idx}")
 
             if submit_button:
-                if teacher not in st.session_state.get('submitted_reviews', []):
+                # Check if the teacher already has a review in this session
+                if teacher not in st.session_state.get('submitted_reviews', []):  # Prevent multiple submissions for the same teacher
+                    # Prepare the data to insert
                     data_to_insert = [teacher, teaching, leniency, correction, da_quiz, overall_rating_input]
 
                     try:
-                        sheet = get_google_sheet()
+                        # Append the review data to Google Sheets
+                        sheet = get_google_sheet()  # Reconnect to Google Sheets for each submit
                         if sheet:
                             sheet.append_row(data_to_insert)
                             st.success(f"Review for {teacher} submitted successfully!")
+
+                            # Track the review in session state to prevent resubmission
                             if 'submitted_reviews' not in st.session_state:
                                 st.session_state.submitted_reviews = []
                             st.session_state.submitted_reviews.append(teacher)
@@ -156,18 +174,11 @@ if matches:
 else:
     st.write("No teachers found.")
 
-# Display teachers needing reviews
-teachers_with_reviews = {clean_name(review['Teacher ']) for review in records}
-teachers_needing_reviews = [teacher for teacher in teachers if clean_name(teacher[0]) not in teachers_with_reviews]
-
-if teachers_needing_reviews:
-    st.write("### Teachers Needing Reviews")
-    for teacher, image_url in teachers_needing_reviews:
-        st.write(f"- **{teacher}**")
-        st.image(image_url, width=100)
+# Get all reviews to calculate the total count
+records = get_all_reviews()
+total_reviews = len(records)
 
 # Footer message
-total_reviews = len(records)
 st.markdown(
     f"""
     <hr style="margin-top: 3rem;">
