@@ -18,7 +18,7 @@ def get_google_sheet():
         return None
 
 # Function to load teacher data from a file
-@st.cache_data(ttl=120)  # Cache the teacher data, refreshing every 5 minutes
+@st.cache_data(ttl=65)  # Cache the teacher data, refreshing every 5 minutes
 def load_teachers(file):
     teachers = []
     with open(file, 'r') as f:
@@ -46,7 +46,7 @@ def calculate_overall_rating(reviews):
     return 0
 
 # Function to get all reviews from Google Sheets
-@st.cache_data(ttl=120)  # Cache reviews data separately to prevent repeated API calls, refreshing every 5 minutes
+@st.cache_data(ttl=65)  # Cache reviews data separately to prevent repeated API calls, refreshing every 5 minutes
 def get_all_reviews():
     sheet = get_google_sheet()
     if sheet:
