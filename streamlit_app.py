@@ -3,7 +3,7 @@ import re
 import gspread
 from google.oauth2.service_account import Credentials
 
-# Function to get Google Sheets connection
+
 def get_google_sheet():
     try:
         credentials = Credentials.from_service_account_info(
@@ -17,8 +17,8 @@ def get_google_sheet():
         st.error(f"Failed to connect to Google Sheets: {str(e)}")
         return None
 
-# Function to load teacher data from a file
-@st.cache_data(ttl=65)  # Cache the teacher data, refreshing every 5 minutes
+
+@st.cache_data(ttl=65)  
 def load_teachers(file):
     teachers = []
     with open(file, 'r') as f:
@@ -35,7 +35,7 @@ def load_teachers(file):
                     teacher_name, image_url = None, None  # Reset for next entry
     return teachers
 
-# Function to clean teacher name for search comparison
+
 def clean_name(name):
     return re.sub(r'^(dr|mr|ms)\s+', '', name.strip().lower())
 
@@ -45,15 +45,15 @@ def calculate_overall_rating(reviews):
         return sum(reviews) / len(reviews)
     return 0
 
-# Function to get all reviews from Google Sheets
-@st.cache_data(ttl=65)  # Cache reviews data separately to prevent repeated API calls, refreshing every 5 minutes
+
+@st.cache_data(ttl=65)  
 def get_all_reviews():
     sheet = get_google_sheet()
     if sheet:
-        return sheet.get_all_records()  # Fetch all records from the sheet
+        return sheet.get_all_records()  
     return []
 
-# Function to get the reviews for a teacher
+
 # Function to get the reviews for a teacher
 def get_teacher_reviews(records, teacher_name):
     # Clean the teacher's name for consistent matching
@@ -72,7 +72,7 @@ teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
 st.title("VIT Chennai Teacher Review")
 st.header("Search for a Teacher")
 
-# Search bar (case insensitive and ignore titles like Dr, Mr, Ms)
+
 search_query = st.text_input("Search for a teacher:")
 
 # Find matching teachers based on the search query
