@@ -61,7 +61,7 @@ def get_teacher_reviews(records, teacher_name):
     reviews = [record for record in records if clean_name(record.get('Teacher ', '').strip()) == cleaned_teacher_name]
     return reviews
 
-teachers = load_teachers('SCOPE.txt')
+teachers = load_teachers('vitc.txt')
 teachers_cleaned = [clean_name(teacher[0]) for teacher in teachers]
 
 # Streamlit UI
