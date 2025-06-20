@@ -3,7 +3,7 @@ import streamlit as st
 import re
 import gspread
 from google.oauth2.service_account import Credentials
-
+'''
 import streamlit.components.v1 as components
 
 SHARE_LINK = "https://vitcfacultyreview.streamlit.app"
@@ -41,7 +41,7 @@ if st.session_state.show_popup:
         """, height=70)
 
     share_dialog()  # actually pop it up
-
+'''
 
 @st.cache_resource
 def get_google_sheet():
