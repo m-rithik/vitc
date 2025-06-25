@@ -548,24 +548,5 @@ if st.button("Export as PDF"):
 
 
 
-st.markdown(
-    """
-   
-    </style>
-    <hr style="margin-top: 3rem;">
-    <div style="text-align: center; color: grey; font-size: 1rem;">
-        Please contribute with reviews, all the old reviews were deleted due to database problems | 
-        <a href="https://forms.gle/YFLkZi3UxRtGyxdA9" target="_blank" style="color: #8f8f8f; text-decoration: none; font-weight: bold;">Contact Me</a>
-    </div>
-    
-    <div style="text-align: center; color: #4CAF50; font-size: 1.5rem; margin-top: 1rem;">
-        Total number of reviews: {total_reviews}
-    </div>
-
-    """,
-    unsafe_allow_html=True
-)
-
-
 
 
