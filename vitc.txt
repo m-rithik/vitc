@@ -1,6 +1,9 @@
 Name: Dr. Ganesan R
 Image: https://chennai.vit.ac.in/wp-content/uploads/2020/08/50338_SCOPE.jpg
 
+Name: Admin
+Image: https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Sad_Cat_by_Miyako.jpg/960px-Sad_Cat_by_Miyako.jpg
+
 Name: Dr. Geetha S
 Image: https://chennai.vit.ac.in/wp-content/uploads/2020/08/Dr.Geetha-S-1.jpg
 
