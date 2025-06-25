@@ -175,7 +175,7 @@ st.markdown(
     f"""
     <hr style="margin-top: 3rem;">
     <div style="text-align: center; color: grey; font-size: 2 rem;">
-        Please contribute with reviews| <a href="https://forms.gle/YFLkZi3UxRtGyxdA9" target="_blank" style="color: #8f8f8f; text-decoration: none; font-weight: bold;">Contact Me</a>
+        Please contribute with reviews & search admin for feedback| <a href="https://forms.gle/YFLkZi3UxRtGyxdA9" target="_blank" style="color: #8f8f8f; text-decoration: none; font-weight: bold;">Contact Me</a>
     </div>
     <div style="text-align: center; color: #4CAF50; font-size: 1.5rem; margin-top: 1rem;">
         Total number of reviews: {total_reviews}
