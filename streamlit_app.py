@@ -294,8 +294,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("FFCS Timetable")
-st.write("Add faculty directly to the timetable. No clashes allowed.")
+st.title("FFCS Faculty Timetable")
+st.write("Add faculty directly to the timetable. No course management. No clashes allowed.")
 
 # --- Faculty Input Form ---
 st.subheader("Add Faculty")
@@ -398,11 +398,12 @@ def render_timetable():
     html += '</table>'
     return html
 
-tab1, tab2 = st.tabs(["Timetable", "Faculty List"])
-with tab1:
+with st.expander("Timetable Preview", expanded=True):
     st.markdown(render_timetable(), unsafe_allow_html=True)
-with tab2:
-    st.dataframe(state["faculty_list"])
+
+# --- Faculty List ---
+st.subheader("Faculty List")
+st.dataframe(state["faculty_list"])
 
 # --- Export as PDF ---
 def export_pdf():
@@ -523,6 +524,4 @@ if st.button("Export as PDF"):
         file_name="ffcs_faculty_timetable.pdf",
         mime="application/pdf"
     ) 
-
-
 
